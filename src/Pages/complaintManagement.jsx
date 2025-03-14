@@ -11,12 +11,12 @@ const ComplaintManagement = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    location: '',
-    photo: null
-  });
+  // const [formData, setFormData] = useState({
+  //   title: '',
+  //   description: '',
+  //   location: '',
+  //   photo: null
+  // });
   const [previewUrl, setPreviewUrl] = useState(null);
   const fileInputRef = useRef(null);
   const videoRef = useRef(null);
@@ -94,14 +94,14 @@ const ComplaintManagement = () => {
     }
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setFormData({ ...formData, photo: file });
-      setPreviewUrl(URL.createObjectURL(file));
-      setShowCamera(false);
-    }
-  };
+  // const handleFileChange = (e) => {
+  //   const file = e.target.files[0];
+  //   if (file) {
+  //     setFormData({ ...formData, photo: file });
+  //     setPreviewUrl(URL.createObjectURL(file));
+  //     setShowCamera(false);
+  //   }
+  // };
 
   const startCamera = async () => {
     try {
@@ -115,24 +115,24 @@ const ComplaintManagement = () => {
     }
   };
 
-  const capturePhoto = () => {
-    const canvas = document.createElement('canvas');
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
-    canvas.getContext('2d').drawImage(videoRef.current, 0, 0);
+  // const capturePhoto = () => {
+  //   const canvas = document.createElement('canvas');
+  //   canvas.width = videoRef.current.videoWidth;
+  //   canvas.height = videoRef.current.videoHeight;
+  //   canvas.getContext('2d').drawImage(videoRef.current, 0, 0);
     
-    canvas.toBlob((blob) => {
-      const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
-      setFormData({ ...formData, photo: file });
-      setPreviewUrl(URL.createObjectURL(blob));
-      setShowCamera(false);
+  //   canvas.toBlob((blob) => {
+  //     const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
+  //     setFormData({ ...formData, photo: file });
+  //     setPreviewUrl(URL.createObjectURL(blob));
+  //     setShowCamera(false);
       
-      // Stop camera stream
-      const stream = videoRef.current.srcObject;
-      const tracks = stream.getTracks();
-      tracks.forEach(track => track.stop());
-    }, 'image/jpeg');
-  };
+  //     // Stop camera stream
+  //     const stream = videoRef.current.srcObject;
+  //     const tracks = stream.getTracks();
+  //     tracks.forEach(track => track.stop());
+  //   }, 'image/jpeg');
+  // };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -142,34 +142,34 @@ const ComplaintManagement = () => {
       return;
     }
   
-    try {
-      setLoading(true);
-      const formDataToSend = new FormData();
-      formDataToSend.append('title', formData.title);
-      formDataToSend.append('description', formData.description);
-      formDataToSend.append('location', formData.location);
-      if (formData.photo) {
-        formDataToSend.append('photo', formData.photo);
-      }
+    // try {
+    //   setLoading(true);
+    //   const formDataToSend = new FormData();
+    //   formDataToSend.append('title', formData.title);
+    //   formDataToSend.append('description', formData.description);
+    //   formDataToSend.append('location', formData.location);
+    //   if (formData.photo) {
+    //     formDataToSend.append('photo', formData.photo);
+    //   }
   
-      const response = await api.post('/api/complaints', formDataToSend);
+    //   const response = await api.post('/api/complaints', formDataToSend);
   
-      if (response.status === 200 || response.status === 201) {
-        setShowForm(false);
-        setFormData({
-          title: '',
-          description: '',
-          location: '',
-          photo: null
-        });
-        setPreviewUrl(null);
-        fetchComplaints();
-      }
-    } catch (err) {
-      handleError(err);
-    } finally {
-      setLoading(false);
-    }
+    //   if (response.status === 200 || response.status === 201) {
+    //     setShowForm(false);
+    //     setFormData({
+    //       title: '',
+    //       description: '',
+    //       location: '',
+    //       photo: null
+    //     });
+    //     setPreviewUrl(null);
+    //     fetchComplaints();
+    //   }
+    // } catch (err) {
+    //   handleError(err);
+    // } finally {
+    //   setLoading(false);
+    // }
   };
 
   // Render component UI (same as before)
@@ -185,7 +185,7 @@ const ComplaintManagement = () => {
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-900">Pengaduan Warga</h1>
           <button
-            onClick={() => setShowForm(!showForm)}
+            onClick={() => navigate('/createcomplaint')} // Arahkan ke CreateComplaint
             className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg"
           >
             <Send className="w-5 h-5 mr-2" />
