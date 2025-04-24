@@ -3,6 +3,7 @@ import { Camera, Upload, Send, Filter, MapPin, Calendar, ThumbsUp, Eye, MessageS
 import axios from 'axios';
 import { useCookies } from 'react-cookie';
 import { useNavigate, Link } from 'react-router-dom';
+import Sidebar from '../component/sidebar';
 
 const ComplaintManagement = () => {
   const [cookies] = useCookies(['access_token']);
