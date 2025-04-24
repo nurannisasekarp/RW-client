@@ -1,29 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Grid, DollarSign, Crown, CreditCard, Repeat, User, Users, Menu, LogOut } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(true); // Full sidebar
   const [activeItem, setActiveItem] = useState('Dashboard');
   const navigate = useNavigate();
+  const location = useLocation(); // To track the current route
 
   const menuItems = [
     { name: 'Dashboard', icon: <Grid className="w-5 h-5" />, route: '/dashboard' },
     { name: 'Tentang Kami', icon: <Users className="w-5 h-5" />, route: '/tentangKami' },
     { name: 'Iuran Warga', icon: <DollarSign className="w-5 h-5" />, route: '/iuran-warga' },
-    { name: 'Account Tier', icon: <Crown className="w-5 h-5" />, route: '/account-tier' },
-    { name: 'Virtual Card', icon: <CreditCard className="w-5 h-5" />, route: '/virtual-card' },
-    { name: 'Transactions', icon: <Repeat className="w-5 h-5" />, route: '/transactions' },
+    { name: 'User Management', icon: <Users className="w-5 h-5" />, route: '/userManagement' }, 
     { name: 'Profile Settings', icon: <User className="w-5 h-5" />, route: '/profile-settings' },
   ];
 
+  useEffect(() => {
+    // Set active item based on the current URL
+    const currentPath = location.pathname;
+    const activeMenuItem = menuItems.find(item => item.route === currentPath);
+    if (activeMenuItem) {
+      setActiveItem(activeMenuItem.name);
+    }
+  }, [location, menuItems]); // Re-run when the route changes
+
   const handleMenuClick = (item) => {
-    setActiveItem(item.name); // Set item sebagai aktif
-    navigate(item.route);
+    setActiveItem(item.name); // Set item as active
+    navigate(item.route); // Navigate to the clicked route
   };
 
   const handleLogout = () => {
-    navigate('/login'); // Arahkan pengguna ke halaman login atau halaman lain setelah logout
+    navigate('/login'); // Redirect to the login page after logout
   };
 
   return (

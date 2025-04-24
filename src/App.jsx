@@ -11,6 +11,7 @@ import CreateComplaint from './Pages/createComplaint'
 import Sidebar from './component/sidebar'
 import Dashboard from './Pages/dashboard'
 import PengurusRT_RW from './Pages/kepengurusan'
+import UserManagement from './Pages/userManagement'
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
       <Route path="/sidebar" element={<Sidebar />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/tentangKami" element={<PengurusRT_RW />} />
+      <Route path="/userManagement" element={<UserManagement />} />
 
     </Routes>
     </CookiesProvider>
