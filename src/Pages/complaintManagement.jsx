@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Camera, Upload, Send, Filter, MapPin, Calendar, ThumbsUp, Eye, MessageSquare } from 'lucide-react';
+import { Camera, Upload, Send, Filter, MapPin, Calendar, ThumbsUp, ThumbsDown, Eye, MessageSquare } from 'lucide-react';
 import axios from 'axios';
 import { useCookies } from 'react-cookie';
 import { useNavigate, Link } from 'react-router-dom';
@@ -22,8 +22,15 @@ const ComplaintManagement = () => {
   const [statusUpdateComment, setStatusUpdateComment] = useState('');
   const [complaintIdToUpdate, setComplaintIdToUpdate] = useState(null);
   const [showStatusModal, setShowStatusModal] = useState(false);
-  // Tambahkan state untuk melacak filter "my complaints"
+  // Track "my complaints" filter
   const [filterMy, setFilterMy] = useState(false);
+  // New state for comment management
+  const [commentText, setCommentText] = useState('');
+  const [showCommentModal, setShowCommentModal] = useState(false);
+  const [activeComplaintId, setActiveComplaintId] = useState(null);
+  const [commentLoading, setCommentLoading] = useState(false);
+  // Track if user has voted on each complaint
+  const [userVotes, setUserVotes] = useState({});
   const fileInputRef = useRef(null);
   const videoRef = useRef(null);
 
@@ -67,6 +74,7 @@ const ComplaintManagement = () => {
     fetchUserProfile();
     fetchComplaints();
   }, [cookies.access_token, navigate, sortBy, filterType, filterMy, pagination.currentPage]);
+  
   const fetchUserProfile = async () => {
     try {
       const response = await api.get('/api/profile/getProfile');
@@ -89,7 +97,7 @@ const ComplaintManagement = () => {
   
       // Add sorting
       if (sortBy === 'votes') {
-        params.append('sortBy', 'likes_count');
+        params.append('sortBy', 'upvotes');
         params.append('sortOrder', 'DESC');
       } else if (sortBy === 'date') {
         params.append('sortBy', 'created_at');
@@ -112,6 +120,17 @@ const ComplaintManagement = () => {
       const response = await api.get(`${url}?${params.toString()}`);
       
       setComplaints(response.data);
+      
+      // Extract user votes for each complaint
+      const votesMap = {};
+      response.data.forEach(complaint => {
+        if (complaint.userVote) {
+          votesMap[complaint.id] = complaint.userVote;
+        }
+      });
+      
+      setUserVotes(votesMap);
+      
       // If your API returns pagination info, update it here
       if (response.data.pagination) {
         setPagination(response.data.pagination);
@@ -122,6 +141,7 @@ const ComplaintManagement = () => {
       setLoading(false);
     }
   };
+  
   const handleError = (err) => {
     if (err.response) {
       switch (err.response.status) {
@@ -185,6 +205,78 @@ const ComplaintManagement = () => {
       fetchComplaints();
     } catch (err) {
       handleError(err);
+    }
+  };
+
+  // Handle complaint voting
+  const handleVote = async (complaintId, voteType) => {
+    try {
+      const response = await api.post(`/api/complaints/${complaintId}/vote`, {
+        voteType: voteType
+      });
+      
+      // Update the complaints list with new vote counts
+      setComplaints(complaints.map(complaint => {
+        if (complaint.id === complaintId) {
+          return {
+            ...complaint,
+            upvotes: response.data.upvotes,
+            downvotes: response.data.downvotes
+          };
+        }
+        return complaint;
+      }));
+      
+      // Update the user's vote status for this complaint
+      setUserVotes(prev => ({
+        ...prev,
+        [complaintId]: response.data.userVote
+      }));
+      
+    } catch (err) {
+      handleError(err);
+    }
+  };
+
+  // Open comment modal
+  const openCommentModal = (complaintId) => {
+    setActiveComplaintId(complaintId);
+    setCommentText('');
+    setShowCommentModal(true);
+  };
+
+  // Submit new comment
+  const submitComment = async () => {
+    if (!commentText.trim()) {
+      return;
+    }
+    
+    try {
+      setCommentLoading(true);
+      
+      const response = await api.post(`/api/complaints/${activeComplaintId}/comments`, {
+        content: commentText
+      });
+      
+      // Update comment count in the complaints list
+      setComplaints(complaints.map(complaint => {
+        if (complaint.id === activeComplaintId) {
+          return {
+            ...complaint,
+            comment_count: (complaint.comment_count || 0) + 1
+          };
+        }
+        return complaint;
+      }));
+      
+      setCommentText('');
+      setShowCommentModal(false);
+      setActiveComplaintId(null);
+      
+    } catch (err) {
+      handleError(err);
+    } finally {
+      setCommentLoading(false);
     }
   };
 
@@ -276,7 +368,7 @@ const ComplaintManagement = () => {
               <ul className="list-disc pl-5 space-y-1">
                 <li>Anda dapat melacak status pengaduan yang telah dibuat</li>
                 <li>Pengaduan yang sudah diproses tidak dapat dihapus</li>
-                <li>Anda dapat berintekasi dengan pengaduan lain nya untuk menyurakan perubahan</li>
+                <li>Anda dapat berinteraksi dengan pengaduan lain dengan vote dan komentar</li>
               </ul>
             </div>
           </div>
@@ -307,7 +399,7 @@ const ComplaintManagement = () => {
               Terpopuler
             </button>
 
-            {/* Tambahkan button untuk filter "Pengaduan Saya" */}
+            {/* Button for "My Complaints" filter */}
             <button
               onClick={() => setFilterMy(!filterMy)}
               className={`px-3 py-1 rounded-md transition-all duration-300 ${filterMy ? 'bg-primary text-white shadow-md' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
@@ -423,6 +515,47 @@ const ComplaintManagement = () => {
         </div>
       )}
 
+      {/* Comment Modal */}
+      {showCommentModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4">Tambahkan Komentar</h2>
+
+            <div className="mb-4">
+              <textarea
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                className="w-full border border-gray-300 rounded-md p-2 h-32"
+                placeholder="Tulis komentar Anda..."
+              ></textarea>
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => setShowCommentModal(false)}
+                className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100"
+              >
+                Batal
+              </button>
+              <button
+                onClick={submitComment}
+                disabled={commentLoading || !commentText.trim()}
+                className={`px-4 py-2 ${commentLoading || !commentText.trim() ? 'bg-gray-400' : 'bg-primary hover:bg-blue-600'} text-white rounded-md flex items-center`}
+              >
+                {commentLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-white mr-2"></div>
+                    Mengirim...
+                  </>
+                ) : (
+                  <>Kirim</>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Complaints List with enhanced card styling */}
       {!loading && (
         <div className="space-y-6">
@@ -490,36 +623,50 @@ const ComplaintManagement = () => {
                 </div>
 
                 {/* Complaint Image with hover effect */}
-                {/* {complaint.photo_url && (
+                {complaint.photo_url && (
                   <div className="w-full overflow-hidden">
-                    <img
+                    {/* <img
                       src={complaint.photo_url}
                       alt={complaint.title || 'Gambar pengaduan'}
                       className="w-full h-64 object-cover transition-transform duration-500 hover:scale-105"
                       onError={(e) => {
                         e.target.src = '/default-image.png';
                       }}
-                    />
+                    /> */}
                   </div>
-                )} */}
+                )}
               </Link>
 
-              {/* Complaint Footer with enhanced interactive elements */}
+              {/* Complaint Footer with voting and comment features */}
               <div className="p-4 border-t border-gray-200">
                 <div className="flex justify-between">
                   <div className="flex space-x-6">
-                    {/* Vote count */}
-                    <div className="flex items-center text-gray-700 group">
-                      <ThumbsUp className="mr-2 group-hover:text-primary transition-colors duration-300 w-4 h-4" />
-                      <span>{complaint.likes_count || 0}</span>
-                    </div>
+                    {/* Upvote Button */}
+                    <button 
+                      onClick={() => handleVote(complaint.id, 'upvote')}
+                      className={`flex items-center group ${userVotes[complaint.id] === 'upvote' ? 'text-green-600' : 'text-gray-700'}`}
+                    >
+                      <ThumbsUp className={`mr-2 w-4 h-4 ${userVotes[complaint.id] === 'upvote' ? 'text-green-600' : 'group-hover:text-primary'} transition-colors duration-300`} />
+                      <span>{complaint.upvotes || 0}</span>
+                    </button>
 
+                    {/* Downvote Button */}
+                    <button 
+                      onClick={() => handleVote(complaint.id, 'downvote')}
+                      className={`flex items-center group ${userVotes[complaint.id] === 'downvote' ? 'text-red-600' : 'text-gray-700'}`}
+                    >
+                      <ThumbsDown className={`mr-2 w-4 h-4 ${userVotes[complaint.id] === 'downvote' ? 'text-red-600' : 'group-hover:text-primary'} transition-colors duration-300`} />
+                      <span>{complaint.downvotes || 0}</span>
+                    </button>
 
-                    {/* Comment Count */}
-                    <div className="flex items-center text-gray-700 group">
+                    {/* Comment Button */}
+                    <button 
+                      onClick={() => openCommentModal(complaint.id)}
+                      className="flex items-center text-gray-700 group"
+                    >
                       <MessageSquare className="mr-2 group-hover:text-primary transition-colors duration-300 w-4 h-4" />
-                      <span>{complaint.response_count || 0}</span>
-                    </div>
+                      <span>{complaint.comment_count || 0}</span>
+                    </button>
                   </div>
 
                   {/* Action Buttons */}
