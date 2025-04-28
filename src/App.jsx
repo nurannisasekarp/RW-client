@@ -28,7 +28,7 @@ function App() {
       <Route path="/sidebar" element={<Sidebar />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/tentangKami" element={<PengurusRT_RW />} />
-      <Route path="/userManagement" element={<UserManagement />} />
+      <Route path="/user-management" element={<UserManagement />} />
 
     </Routes>
     </CookiesProvider>
