@@ -92,7 +92,7 @@ const CreateComplaint = () => {
       }
 
       await api.post('/api/complaints', formDataToSend);
-      toast.success('Data berhasil terkirim!');
+      toast.success('Pengaduan berhasil dikirim!');  // Menambahkan alert sukses
       navigate('/complaint');
     } catch (err) {
       setError('Terjadi kesalahan saat mengirim pengaduan.');

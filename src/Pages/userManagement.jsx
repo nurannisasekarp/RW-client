@@ -1,18 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../component/sidebar';
 import { Link } from 'react-router-dom';
-
-const initialUsers = [
-  { id: 1, name: 'John Doe', email: 'johndoe@example.com', role: 'Admin' },
-  { id: 2, name: 'Jane Smith', email: 'janesmith@example.com', role: 'User' },
-  { id: 3, name: 'David Brown', email: 'davidbrown@example.com', role: 'User' },
-  { id: 4, name: 'Lisa Ray', email: 'lisaray@example.com', role: 'User' },
-  { id: 5, name: 'Tom Hanks', email: 'tomhanks@example.com', role: 'User' },
-  { id: 6, name: 'Anna Bell', email: 'annabell@example.com', role: 'User' },
-];
+import axios from 'axios';
 
 export default function UserList() {
-  const [users, setUsers] = useState(initialUsers);
+  const [users, setUsers] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const usersPerPage = 3;
 
@@ -21,23 +13,34 @@ export default function UserList() {
   const indexOfFirstUser = indexOfLastUser - usersPerPage;
   const currentUsers = users.slice(indexOfFirstUser, indexOfLastUser);
 
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const res = await axios.get('http://localhost:3000/api/users');
+      setUsers(res.data.data); // pastikan `res.data.data` sesuai struktur API kamu
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+    }
+  };
+
   const handleEditUser = (user) => {
     alert(`Edit user: ${user.name}`);
   };
 
-  const handleDeleteUser = (userId) => {
-    const filteredUsers = users.filter((user) => user.id !== userId);
-    setUsers(filteredUsers);
-    if ((currentPage - 1) * usersPerPage >= filteredUsers.length) {
-      setCurrentPage((prev) => Math.max(prev - 1, 1));
+  const handleDeleteUser = async (userId) => {
+    try {
+      await axios.delete(`http://localhost:3000/api/users/${userId}`);
+      fetchUsers(); // refresh data setelah hapus
+    } catch (error) {
+      console.error('Failed to delete user:', error);
     }
   };
 
   const handleExportExcel = () => {
-    const ws = XLSX.utils.json_to_sheet(users);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Users');
-    XLSX.writeFile(wb, 'users.xlsx');
+    window.open('http://localhost:3000/api/export-users', '_blank');
   };
 
   const handlePageChange = (page) => {
@@ -52,7 +55,7 @@ export default function UserList() {
 
         <div className="mb-4 flex space-x-4">
           <Link
-            to="/addUser"
+            to="/add-user"
             className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
           >
             Add User

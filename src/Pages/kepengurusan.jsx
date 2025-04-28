@@ -45,7 +45,6 @@ const PengurusRT_RW = () => {
   return (
     <div className="flex">
       <Sidebar />
-
       <div className="flex-grow p-6 bg-gradient-to-b from-blue-50 to-white min-h-screen">
         <h1 className="text-4xl font-extrabold text-center mb-6 text-gray-800">
           Profil Kepengurusan <span className="text-blue-600">RT/RW</span>
