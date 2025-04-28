@@ -1,19 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { Grid, DollarSign, Crown, CreditCard, Repeat, User, Users, Menu, LogOut } from 'lucide-react';
+import { Grid, DollarSign, Crown, CreditCard, Repeat, User, Users, Menu, LogOut, MessageCircle, UserCog } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from "../context/authContext";
+import { toast } from 'react-hot-toast';
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(true); // Full sidebar
   const [activeItem, setActiveItem] = useState('Dashboard');
   const navigate = useNavigate();
   const location = useLocation(); // To track the current route
+  const { user, logout } = useAuth();
 
   const menuItems = [
     { name: 'Dashboard', icon: <Grid className="w-5 h-5" />, route: '/dashboard' },
     { name: 'Tentang Kami', icon: <Users className="w-5 h-5" />, route: '/tentangKami' },
     { name: 'Iuran Warga', icon: <DollarSign className="w-5 h-5" />, route: '/iuran-warga' },
-    { name: 'User Management', icon: <Users className="w-5 h-5" />, route: '/userManagement' }, 
+    { name: 'Pengaduan', icon: <MessageCircle className="w-5 h-5" />, route: '/complaint' },
+    { name: 'User Management', icon: <UserCog className="w-5 h-5" />, route: '/user-management' },
     { name: 'Profile Settings', icon: <User className="w-5 h-5" />, route: '/profile-settings' },
+    // { name: 'Account Tier', icon: <Crown className="w-5 h-5" />, route: '/account-tier' },
+    // { name: 'Virtual Card', icon: <CreditCard className="w-5 h-5" />, route: '/virtual-card' },
+    // { name: 'Transactions', icon: <Repeat className="w-5 h-5" />, route: '/transactions' },
   ];
 
   useEffect(() => {
@@ -31,7 +38,11 @@ export default function Sidebar() {
   };
 
   const handleLogout = () => {
-    navigate('/login'); // Redirect to the login page after logout
+    logout();
+    toast.success("Successfully logged out!", {
+      duration: 2000,
+      onClose: () => navigate('/login', { replace: true }),
+    });
   };
 
   return (
@@ -62,7 +73,7 @@ export default function Sidebar() {
             <div
               key={index}
               className={`flex items-center p-3 rounded-lg text-gray-600 hover:bg-purple-50 hover:text-purple-600 transition-all cursor-pointer ${
-                activeItem === item.name ? 'bg-purple-100 text-purple-600 font-semibold' : ''
+                activeItem === item.name ? 'bg-blue-100 text-blue-600 font-semibold' : ''
               }`}
               onClick={() => handleMenuClick(item)}
             >
