@@ -154,7 +154,7 @@ const ComplaintManagement = () => {
           setError('Anda tidak memiliki izin untuk melakukan tindakan ini.');
           break;
         default:
-          setError(err.response.data?.message || 'Terjadi kesalahan pada server');
+          setError(err.response.data?.messagz || 'Terjadi kesalahan pada server');
       }
     } else if (err.request) {
       setError('Gagal terhubung ke server. Periksa koneksi anda.');
@@ -626,14 +626,12 @@ const ComplaintManagement = () => {
                 {/* Complaint Image with hover effect */}
                 {complaint.photo_url && (
                   <div className="w-full overflow-hidden">
-                    {/* <img
+                    <img
                       src={complaint.photo_url}
                       alt={complaint.title || 'Gambar pengaduan'}
                       className="w-full h-64 object-cover transition-transform duration-500 hover:scale-105"
-                      onError={(e) => {
-                        e.target.src = '/default-image.png';
-                      }}
-                    /> */}
+                  
+                    />
                   </div>
                 )}
               </Link>
