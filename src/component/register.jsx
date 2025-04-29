@@ -1,103 +1,80 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-hot-toast';
-import { User, Lock, UserCircle, Building2 } from 'lucide-react';
-// import axios from 'axios';
+import { Link } from 'react-router-dom';
+import Sidebar from '../component/sidebar';
+import axios from 'axios';
+import { toast } from 'react-hot-toast'; // Import react-hot-toast
+// import Cookies from 'js-cookie';
 
-const RT_OPTIONS = [
-  { value: 1, label: 'RT 01 - Ketua RT 01' },
-  { value: 2, label: 'RT 02 - Ketua RT 02' }
-];
+const apiUrlExport = "http://localhost:3000/api/users/export";
 
-const Register = () => {
-  const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    username: '',
-    password: '',
-    name: '',
-    role: 'warga', // Default role set to warga
-    rt_number: null
-  });
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
+export default function UserList() {
+  const [users, setUsers] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Fungsi untuk handle ekspor
+  const handleExport = async () => {
+    setIsLoading(true);
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_REACT_APP_API_URL}/api/auth/register`, 
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData)
-        }
-      );
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Registrasi gagal');
-      }
-  
-      const data = await response.json();
-      
-      toast.success('Registrasi berhasil!');
-      navigate('/login');
+      const token = Cookies.get("access_token");  // Ambil token dari cookies
+      const response = await axios.get(apiUrlExport, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        },
+        responseType: "blob",
+      });
+
+      const blob = new Blob([response.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "Template_Project.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      // Success message with react-hot-toast
+      toast.success('Ekspor berhasil!');
     } catch (error) {
-      toast.error(error.message || 'Terjadi kesalahan saat registrasi');
+      const errorMsg = error?.response?.data?.message || "Error exporting data"; // Custom error message
+      toast.error(errorMsg);  // Display error message
+      console.error("Error exporting:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-blue-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-6">
-        <h2 className="text-2xl font-bold text-center mb-6">
-          Registrasi Warga
-        </h2>
+    <div className="flex min-h-screen bg-gray-100">
+      <Sidebar />
+      <div className="flex-1 p-8">
+        <h2 className="text-3xl font-bold mb-6 text-center">Users Management</h2>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="relative">
-            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-indigo-500" />
-            <input
-              type="text"
-              required
-              className="w-full pl-10 p-2 border rounded-lg"
-              value={formData.username}
-              onChange={(e) => setFormData({...formData, username: e.target.value})}
-              placeholder="Username"
-            />
-          </div>
-
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-indigo-500" />
-            <input
-              type="password"
-              required
-              className="w-full pl-10 p-2 border rounded-lg"
-              value={formData.password}
-              onChange={(e) => setFormData({...formData, password: e.target.value})}
-              placeholder="Password"
-            />
-          </div>
-
-          <div className="relative">
-            <UserCircle className="absolute left-3 top-1/2 transform -translate-y-1/2 text-indigo-500" />
-            <input
-              type="text"
-              className="w-full pl-10 p-2 border rounded-lg"
-              value={formData.name}
-              onChange={(e) => setFormData({...formData, name: e.target.value})}
-              placeholder="Nama Lengkap"
-            />
-          </div>
+        <div className="mb-4 flex space-x-4">
+          <Link
+            to="/addUser"
+            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+          >
+            Add User
+          </Link>
 
           <button
-            type="submit"
-            className="w-full p-3 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600"
+            onClick={handleExport}
+            className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
+            disabled={isLoading}
           >
-            Daftar
+            {isLoading ? "Exporting..." : "Export to Excel"}
           </button>
-        </form>
+        </div>
+
+        {/* Display Users or Empty State */}
+        <div className="bg-white shadow rounded-lg overflow-x-auto">
+          {/* Your user table logic */}
+        </div>
       </div>
     </div>
   );
-};
-
-export default Register;
+}

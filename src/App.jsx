@@ -13,6 +13,7 @@ import Dashboard from './Pages/dashboard'
 import PengurusRT_RW from './Pages/kepengurusan'
 import UserManagement from './Pages/userManagement'
 import AddUser from './Pages/addUser'
+import ComplaintDetail from './Pages/ComplaintDetail'
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
       <Route path="/tentangKami" element={<PengurusRT_RW />} />
       <Route path="/user-management" element={<UserManagement />} />
       <Route path="/add-user" element={<AddUser />} />
+      <Route path="/complaint/:id" element={<ComplaintDetail/>} />
 
     </Routes>
     </CookiesProvider>
