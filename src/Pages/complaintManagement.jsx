@@ -1,5 +1,3 @@
-pengaduan
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Camera, Upload, Send, Filter, MapPin, Calendar, ThumbsUp, ThumbsDown, Eye, MessageSquare } from 'lucide-react';
 import axios from 'axios';
