@@ -1,46 +1,77 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../component/sidebar';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate
 import axios from 'axios';
+import Cookies from 'js-cookie';
+import { ToastContainer, toast } from 'react-toastify'; 
+import 'react-toastify/dist/ReactToastify.css'; 
 
 export default function UserList() {
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState([]); 
   const [currentPage, setCurrentPage] = useState(1);
-  const usersPerPage = 3;
+  const [loading, setLoading] = useState(true); 
+  const usersPerPage = 10;
 
-  const totalPages = Math.ceil(users.length / usersPerPage);
+  const axiosConfig = {
+    baseURL: 'http://localhost:3000',
+    withCredentials: true,
+    headers: {
+      'Authorization': `Bearer ${Cookies.get('access_token')}`
+    }
+  };
+
+  const navigate = useNavigate(); // Initialize useNavigate
+
+  // Fetch users from API
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get('/api/user', axiosConfig);
+        console.log("Response data:", response.data); 
+        setUsers(response.data.users || []); 
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUsers();
+  }, []);
+
+  const totalPages = Math.ceil(users.length / usersPerPage); 
   const indexOfLastUser = currentPage * usersPerPage;
   const indexOfFirstUser = indexOfLastUser - usersPerPage;
   const currentUsers = users.slice(indexOfFirstUser, indexOfLastUser);
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const fetchUsers = async () => {
-    try {
-      const res = await axios.get('http://localhost:3000/api/users');
-      setUsers(res.data.data); // pastikan `res.data.data` sesuai struktur API kamu
-    } catch (error) {
-      console.error('Failed to fetch users:', error);
-    }
-  };
-
-  const handleEditUser = (user) => {
-    alert(`Edit user: ${user.name}`);
+  const handleEditUser = (userId) => {
+    navigate(`/edit-user/${userId}`); // Redirect to the edit-user page with the userId
   };
 
   const handleDeleteUser = async (userId) => {
     try {
-      await axios.delete(`http://localhost:3000/api/users/${userId}`);
-      fetchUsers(); // refresh data setelah hapus
+      await axios.delete(`/api/user/${userId}`, axiosConfig);
+
+      const filteredUsers = users.filter((user) => user.id !== userId);
+      setUsers(filteredUsers);
+
+      if ((currentPage - 1) * usersPerPage >= filteredUsers.length) {
+        setCurrentPage((prev) => Math.max(prev - 1, 1));
+      }
+
+      // Success alert
+      toast.success("User deleted successfully!");  
     } catch (error) {
-      console.error('Failed to delete user:', error);
+      console.error('Error deleting user:', error);
+      toast.error("Failed to delete user. Please try again.");  
     }
   };
 
   const handleExportExcel = () => {
-    window.open('http://localhost:3000/api/export-users', '_blank');
+    const ws = XLSX.utils.json_to_sheet(users);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Users');
+    XLSX.writeFile(wb, 'users.xlsx');
   };
 
   const handlePageChange = (page) => {
@@ -69,78 +100,85 @@ export default function UserList() {
           </button>
         </div>
 
-        <div className="bg-white shadow rounded-lg overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="p-3 text-left">Name</th>
-                <th className="p-3 text-left">Email</th>
-                <th className="p-3 text-left">Role</th>
-                <th className="p-3 text-left">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50 text-left">
-                  <td className="p-3">{user.name}</td>
-                  <td className="p-3">{user.email}</td>
-                  <td className="p-3">{user.role}</td>
-                  <td className="p-3 space-x-2">
-                    <button
-                      className="text-yellow-500 hover:text-yellow-600 font-medium"
-                      onClick={() => handleEditUser(user)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="text-red-500 hover:text-red-600 font-medium"
-                      onClick={() => handleDeleteUser(user.id)}
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {users.length === 0 && (
+        {/* Loading Spinner */}
+        {loading ? (
+          <div className="text-center py-10 text-gray-500">Loading users...</div>
+        ) : (
+          <div className="bg-white shadow rounded-lg overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead className="bg-gray-100">
                 <tr>
-                  <td colSpan="4" className="p-4 text-center text-gray-500">
-                    No users found.
-                  </td>
+                  <th className="p-3 text-left">Name</th>
+                  <th className="p-3 text-left">Email</th>
+                  <th className="p-3 text-left">Role</th>
+                  <th className="p-3 text-left">Actions</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {currentUsers.length > 0 ? (
+                  currentUsers.map((user) => (
+                    <tr key={user.id} className="hover:bg-gray-50 text-left">
+                      <td className="p-3">{user.name}</td>
+                      <td className="p-3">{user.email}</td>
+                      <td className="p-3">{user.role}</td>
+                      <td className="p-3 space-x-2">
+                        <button
+                          className="text-yellow-500 hover:text-yellow-600 font-medium"
+                          onClick={() => handleEditUser(user.id)} // Pass userId for the redirect
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="text-red-500 hover:text-red-600 font-medium"
+                          onClick={() => handleDeleteUser(user.id)}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="4" className="p-4 text-center text-gray-500">
+                      No users found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* Pagination */}
-        <div className="flex justify-center items-center mt-6 space-x-2">
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-          >
-            Prev
-          </button>
-          {Array.from({ length: totalPages }, (_, i) => (
+        {!loading && (
+          <div className="flex justify-center items-center mt-6 space-x-2">
             <button
-              key={i + 1}
-              onClick={() => handlePageChange(i + 1)}
-              className={`px-3 py-1 rounded ${
-                currentPage === i + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200'
-              }`}
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
             >
-              {i + 1}
+              Prev
             </button>
-          ))}
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-          >
-            Next
-          </button>
-        </div>
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button
+                key={i + 1}
+                onClick={() => handlePageChange(i + 1)}
+                className={`px-3 py-1 rounded ${currentPage === i + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+              >
+                {i + 1}
+              </button>
+            ))}
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
+      <ToastContainer /> 
     </div>
   );
 }
