@@ -14,6 +14,7 @@ import PengurusRT_RW from './Pages/kepengurusan'
 import UserManagement from './Pages/userManagement'
 import AddUser from './Pages/addUser'
 import ComplaintDetail from './Pages/ComplaintDetail'
+import EditUser from './Pages/editUser'
 
 function App() {
   return (
@@ -33,7 +34,8 @@ function App() {
       <Route path="/user-management" element={<UserManagement />} />
       <Route path="/add-user" element={<AddUser />} />
       <Route path="/complaint/:id" element={<ComplaintDetail/>} />
-
+      {/* <Route path="/edit-user" element={<EditUser />} /> */}
+      <Route path="/edit-user/:userId" element={<EditUser />} />
     </Routes>
     </CookiesProvider>
   )

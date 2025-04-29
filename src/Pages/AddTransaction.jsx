@@ -34,93 +34,103 @@ const AddTransaction = () => {
     e.preventDefault();
     try {
       setLoading(true);
+
       const submitData = {
         ...formData,
         amount: formData.amount.replace(/[^\d]/g, '')
       };
-      const axiosConfig = {
-        baseURL: 'http://localhost:3000',
-        withCredentials: true,
-        headers: {
-          Authorization: `Bearer ${cookies.access_token}`
+
+      await axios.post(
+        '/api/transactions',
+        submitData,
+        {
+          baseURL: 'http://localhost:3000',
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${cookies.access_token}`
+          }
         }
-      };
-      await axios.post('/api/transactions', submitData, axiosConfig);
-      
-      // Alert setelah transaksi berhasil
+      );
+
       toast.success('Data berhasil terkirim!');
-            
-      // Pindah ke halaman dashboard
       navigate('/dashboard');
     } catch (err) {
       console.error('Error:', err);
-      setError('Failed to create transaction');
+      setError('Gagal membuat transaksi');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <div className="max-w-2xl w-full bg-white p-6 rounded-lg shadow-lg">
-        {error && <div className="text-red-600 mb-4">{error}</div>}
-        <h2 className="text-xl font-semibold mb-4">Tambah Transaksi Baru</h2>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-white px-4 py-12">
+      <div className="w-full max-w-lg bg-white p-8 rounded-2xl shadow-lg">
+        <h2 className="text-2xl font-bold text-center text-blue-800 mb-8">Tambah Transaksi</h2>
+
+        {error && (
+          <div className="text-red-500 text-center mb-6 text-sm">{error}</div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-4">
-            <label className="text-sm font-medium text-gray-700">Tipe</label>
+          {/* Tipe Transaksi */}
+          <div>
+            <label className="block text-gray-700 text-sm font-medium mb-1">Tipe Transaksi</label>
             <select
               value={formData.type}
               onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-              className="w-full rounded-lg border border-gray-300 shadow-sm p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
             >
-              <option value="income">Pemasukkan</option>
+              <option value="income">Pemasukan</option>
               <option value="expense">Pengeluaran</option>
             </select>
           </div>
 
-          <div className="space-y-4">
-            <label className="text-sm font-medium text-gray-700">Jumlah</label>
+          {/* Jumlah */}
+          <div>
+            <label className="block text-gray-700 text-sm font-medium mb-1">Jumlah</label>
             <input
               type="text"
               value={formData.amount}
               onChange={handleAmountChange}
-              className="w-full rounded-lg border border-gray-300 shadow-sm p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Masukkan jumlah"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
           </div>
 
-          <div className="space-y-4">
-            <label className="text-sm font-medium text-gray-700">Deskripsi</label>
+          {/* Deskripsi */}
+          <div>
+            <label className="block text-gray-700 text-sm font-medium mb-1">Deskripsi</label>
             <input
               type="text"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full rounded-lg border border-gray-300 shadow-sm p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Masukkan deskripsi"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
           </div>
 
-          <div className="space-y-4">
-            <label className="text-sm font-medium text-gray-700">Tanggal</label>
+          {/* Tanggal */}
+          <div>
+            <label className="block text-gray-700 text-sm font-medium mb-1">Tanggal Transaksi</label>
             <input
               type="date"
               value={formData.transaction_date}
               onChange={(e) => setFormData({ ...formData, transaction_date: e.target.value })}
-              className="w-full rounded-lg border border-gray-300 shadow-sm p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
           </div>
 
+          {/* Tombol Submit */}
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-3 rounded-lg shadow-md hover:bg-blue-700 transition duration-300 ease-in-out"
             disabled={loading}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition duration-300 ease-in-out"
           >
             {loading ? 'Menyimpan...' : 'Simpan'}
           </button>
         </form>
       </div>
     </div>
-
   );
 };
 
