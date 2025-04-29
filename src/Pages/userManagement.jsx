@@ -79,7 +79,7 @@ export default function UserList() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex min-h-screen min-h-screen bg-gradient-to-b from-blue-50 to-white flex">
       <Sidebar />
       <div className="flex-1 p-8">
         <h2 className="text-3xl font-bold mb-6 text-center">Users Management</h2>
